@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1017" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Arterial</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="cv"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="top">
+      <div class="score"><span id="score">0</span><small>journeys</small></div>
+      <div class="clock">
+        <div><span id="week">Week 1</span> · <span id="day">Mon</span></div>
+        <div class="weekbar"><i id="weekfill"></i></div>
+      </div>
+      <div class="ctrls">
+        <span id="paused-tag" class="tag hidden">Paused</span>
+        <button id="btn-fit" class="hidden" title="Fit view (F)">&#10530;</button>
+        <button id="btn-pause" title="Pause (Space)"></button>
+        <button id="btn-speed" title="Speed">1×</button>
+        <button id="btn-menu" title="Menu (Esc)">&#9776;</button>
+      </div>
+    </div>
+    <div id="toolbar"></div>
+    <div id="toast"></div>
+  </div>
+
+  <div id="menu" class="screen">
+    <div class="menu-inner">
+      <header>
+        <h1>Arterial</h1>
+        <p>Draw the roads. Keep the city moving.</p>
+      </header>
+      <h2>Map</h2>
+      <div id="maps" class="grid"></div>
+      <h2>Mode</h2>
+      <div id="modes" class="grid modes"></div>
+      <div class="actions">
+        <button id="btn-play" class="primary">Play</button>
+        <button id="btn-help">How to play</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="help" class="modal hidden">
+    <div class="panel">
+      <h2>How to play</h2>
+      <ul>
+        <li><b>Drag</b> to draw roads. Join each house <span class="dot"></span> to a hub of the same colour.</li>
+        <li>Cars drive themselves. Each dot in a hub is a car it is waiting for; every arrival is a journey.</li>
+        <li>If a hub fills up, a red ring starts. Clear its traffic before the ring closes.</li>
+        <li>Every road cell uses a tile. <b>Erase</b> (or right-drag) gives tiles back.</li>
+        <li>Drag straight across water or rock to build a <b>bridge</b> or <b>tunnel</b>.</li>
+        <li><b>Motorways</b> link two roads directly and fast. <b>Roundabouts</b> and <b>lights</b> let more cars through a busy junction.</li>
+        <li>Each week the city limits grow and you pick an upgrade.</li>
+        <li>Pinch or scroll to zoom. You can build while paused.</li>
+      </ul>
+      <button id="help-close" class="primary">Got it</button>
+    </div>
+  </div>
+
+  <div id="upgrade" class="modal hidden">
+    <div class="panel">
+      <h2 id="up-week">Week 2</h2>
+      <p id="up-sub"></p>
+      <div id="up-cards" class="grid two"></div>
+    </div>
+  </div>
+
+  <div id="pausemenu" class="modal hidden">
+    <div class="panel narrow">
+      <h2>Paused</h2>
+      <button id="pm-resume" class="primary">Resume</button>
+      <button id="pm-restart">Restart</button>
+      <button id="pm-quit">Main menu</button>
+    </div>
+  </div>
+
+  <div id="over" class="modal hidden">
+    <div class="panel narrow">
+      <h2 id="over-title">Gridlock</h2>
+      <div class="big" id="over-score">0</div>
+      <div class="muted">journeys</div>
+      <p id="over-best"></p>
+      <p class="muted" id="over-sub"></p>
+      <button id="over-retry" class="primary">Play again</button>
+      <button id="over-menu">Main menu</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
