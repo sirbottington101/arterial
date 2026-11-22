@@ -1,0 +1,1844 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1017" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Arterial</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%0A%20%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22%230a1017%22%2F%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20392%20L120%20256%20L256%20256%20L392%20120%22%20stroke%3D%22%234a5a6e%22%20stroke-width%3D%2254%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M256%20256%20L256%20392%22%20stroke%3D%22%234a5a6e%22%20stroke-width%3D%2254%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M120%20120%20L392%20392%22%20stroke%3D%22%23f2b134%22%20stroke-width%3D%2240%22%20opacity%3D%22.95%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Ccircle%20cx%3D%22120%22%20cy%3D%22392%22%20r%3D%2244%22%20fill%3D%22%23ff6b6b%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22256%22%20cy%3D%22392%22%20r%3D%2244%22%20fill%3D%22%232ec4b6%22%2F%3E%0A%20%20%3Crect%20x%3D%22340%22%20y%3D%2268%22%20width%3D%22104%22%20height%3D%22104%22%20rx%3D%2226%22%20fill%3D%22%230a1017%22%20stroke%3D%22%23ffbe0b%22%20stroke-width%3D%2216%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22378%22%20cy%3D%22106%22%20r%3D%2211%22%20fill%3D%22%23ffbe0b%22%2F%3E%3Ccircle%20cx%3D%22406%22%20cy%3D%22106%22%20r%3D%2211%22%20fill%3D%22%23ffbe0b%22%2F%3E%3Ccircle%20cx%3D%22378%22%20cy%3D%22134%22%20r%3D%2211%22%20fill%3D%22%23ffbe0b%22%2F%3E%0A%3C%2Fsvg%3E" />
+  <style>
+:root {
+  --bg: #0a1017;
+  --panel: #121b25;
+  --line: #24344a;
+  --text: #dbe6f2;
+  --muted: #7d8fa3;
+  --accent: #f2b134;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden;
+  font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-user-select: none; }
+canvas { position: fixed; inset: 0; touch-action: none; display: block; }
+button { font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 16px; cursor: pointer; }
+button:hover { border-color: #3a5170; }
+button.primary { background: var(--accent); color: #1a1205; border-color: var(--accent); font-weight: 700; }
+.hidden { display: none !important; }
+
+/* HUD */
+#hud { position: fixed; inset: 0; pointer-events: none; }
+#hud .top { position: absolute; top: calc(10px + var(--safe-t)); left: 12px; right: 12px; display: flex; align-items: center; gap: 14px; }
+#hud .top > * { pointer-events: auto; }
+.score { display: flex; align-items: baseline; gap: 6px; }
+.score span { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.score small { color: var(--muted); }
+.clock { flex: 1; max-width: 220px; color: var(--muted); font-size: 13px; }
+.weekbar { height: 4px; background: var(--line); border-radius: 4px; margin-top: 5px; overflow: hidden; }
+.weekbar i { display: block; height: 100%; width: 0; background: var(--accent); }
+.ctrls { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.ctrls button { width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 15px; }
+.ctrls button.on { border-color: var(--accent); color: var(--accent); }
+.tag { font-size: 12px; color: var(--accent); border: 1px solid var(--accent); border-radius: 20px; padding: 3px 10px; }
+
+#toolbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(12px + var(--safe-b));
+  display: flex; gap: 6px; padding: 6px; background: rgba(18, 27, 37, 0.92); border: 1px solid var(--line);
+  border-radius: 18px; pointer-events: auto; max-width: calc(100vw - 16px); overflow-x: auto; }
+.tool { position: relative; width: 62px; height: 62px; padding: 6px 2px 4px; border-radius: 13px; border: 1px solid transparent;
+  background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--text); flex: none; }
+.tool svg { width: 26px; height: 26px; }
+.tool .lbl { font-size: 10.5px; color: var(--muted); }
+.tool.on { background: #1b2a3a; border-color: var(--accent); }
+.tool.on .lbl { color: var(--text); }
+.tool .n { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: 11px; font-weight: 700;
+  background: var(--accent); color: #1a1205; border-radius: 9px; min-width: 18px; padding: 0 4px; text-align: center; }
+.tool.empty .n { background: #3a4656; color: var(--muted); }
+.tool.empty svg { opacity: 0.45; }
+.tool.passive { opacity: 0.85; border-left: 1px dashed var(--line); border-radius: 0 13px 13px 0; }
+.tool.passive .n { background: #8ea3b8; }
+
+#toast { position: absolute; left: 50%; bottom: calc(96px + var(--safe-b)); transform: translateX(-50%) translateY(8px);
+  background: rgba(18, 27, 37, 0.95); border: 1px solid var(--line); padding: 8px 14px; border-radius: 20px;
+  font-size: 14px; opacity: 0; transition: opacity 0.2s, transform 0.2s; white-space: nowrap; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Menu */
+.screen { position: fixed; inset: 0; overflow-y: auto; background:
+  radial-gradient(ellipse at 30% 0%, #15263a 0%, transparent 60%), var(--bg); }
+.menu-inner { max-width: 860px; margin: 0 auto; padding: calc(28px + var(--safe-t)) 18px calc(40px + var(--safe-b)); }
+header h1 { font-size: 52px; margin: 0; letter-spacing: -1.5px; font-weight: 800;
+  background: linear-gradient(90deg, #ff6b6b, #ffbe0b 40%, #2ec4b6 75%, #4cc9f0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+header p { margin: 4px 0 18px; color: var(--muted); font-size: 17px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin: 22px 0 10px; font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.grid.modes { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.grid.two { grid-template-columns: 1fr 1fr; }
+.card { text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 14px; }
+.card canvas { position: static; width: 100%; height: auto; border-radius: 8px; image-rendering: pixelated; margin-bottom: 6px; }
+.card b { font-size: 16px; }
+.card span { color: var(--muted); font-size: 13px; }
+.card em { font-style: normal; color: var(--accent); font-size: 12px; font-weight: 700; }
+.card.on { border-color: var(--accent); background: #1a2533; }
+.actions { display: flex; gap: 10px; margin-top: 26px; }
+.actions .primary { font-size: 18px; padding: 14px 44px; }
+
+/* Modals */
+.modal { position: fixed; inset: 0; background: rgba(5, 8, 12, 0.72); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 22px; width: min(560px, 100%); max-height: 100%; overflow-y: auto; }
+.panel.narrow { width: min(340px, 100%); display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.panel h2 { font-size: 22px; text-transform: none; letter-spacing: 0; color: var(--text); margin: 0 0 8px; font-weight: 800; }
+.panel p { color: var(--muted); margin: 4px 0 14px; }
+.panel ul { padding-left: 18px; margin: 0 0 18px; }
+.panel li { margin-bottom: 8px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ff6b6b; vertical-align: middle; }
+.card.upgrade { align-items: center; text-align: center; padding: 20px 12px; }
+.card.upgrade svg { width: 44px; height: 44px; color: var(--accent); margin-bottom: 6px; }
+.big { font-size: 64px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+
+@media (max-width: 520px) {
+  #toolbar { gap: 2px; padding: 4px; }
+  .tool { width: 47px; height: 54px; }
+  .tool svg { width: 22px; height: 22px; }
+  .tool .lbl { font-size: 8.5px; }
+  .tool .n { font-size: 10px; min-width: 16px; top: 1px; right: 1px; }
+  header h1 { font-size: 42px; }
+  .score span { font-size: 24px; }
+  .ctrls button { width: 38px; height: 38px; }
+}
+</style>
+</head>
+<body>
+  <canvas id="cv"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="top">
+      <div class="score"><span id="score">0</span><small>journeys</small></div>
+      <div class="clock">
+        <div><span id="week">Week 1</span> · <span id="day">Mon</span></div>
+        <div class="weekbar"><i id="weekfill"></i></div>
+      </div>
+      <div class="ctrls">
+        <span id="paused-tag" class="tag hidden">Paused</span>
+        <button id="btn-fit" class="hidden" title="Fit view (F)">&#10530;</button>
+        <button id="btn-pause" title="Pause (Space)"></button>
+        <button id="btn-speed" title="Speed">1×</button>
+        <button id="btn-menu" title="Menu (Esc)">&#9776;</button>
+      </div>
+    </div>
+    <div id="toolbar"></div>
+    <div id="toast"></div>
+  </div>
+
+  <div id="menu" class="screen">
+    <div class="menu-inner">
+      <header>
+        <h1>Arterial</h1>
+        <p>Draw the roads. Keep the city moving.</p>
+      </header>
+      <h2>Map</h2>
+      <div id="maps" class="grid"></div>
+      <h2>Mode</h2>
+      <div id="modes" class="grid modes"></div>
+      <div class="actions">
+        <button id="btn-play" class="primary">Play</button>
+        <button id="btn-help">How to play</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="help" class="modal hidden">
+    <div class="panel">
+      <h2>How to play</h2>
+      <ul>
+        <li><b>Drag</b> to draw roads. Join each house <span class="dot"></span> to a hub of the same colour.</li>
+        <li>Cars drive themselves. Each dot in a hub is a car it is waiting for; every arrival is a journey.</li>
+        <li>If a hub fills up, a red ring starts. Clear its traffic before the ring closes.</li>
+        <li>Every road cell uses a tile. <b>Erase</b> (or right-drag) gives tiles back.</li>
+        <li>Drag straight across water or rock to build a <b>bridge</b> or <b>tunnel</b>.</li>
+        <li><b>Motorways</b> link two roads directly and fast. <b>Roundabouts</b> and <b>lights</b> let more cars through a busy junction.</li>
+        <li>Each week the city limits grow and you pick an upgrade.</li>
+        <li>Pinch or scroll to zoom. You can build while paused.</li>
+      </ul>
+      <button id="help-close" class="primary">Got it</button>
+    </div>
+  </div>
+
+  <div id="upgrade" class="modal hidden">
+    <div class="panel">
+      <h2 id="up-week">Week 2</h2>
+      <p id="up-sub"></p>
+      <div id="up-cards" class="grid two"></div>
+    </div>
+  </div>
+
+  <div id="pausemenu" class="modal hidden">
+    <div class="panel narrow">
+      <h2>Paused</h2>
+      <button id="pm-resume" class="primary">Resume</button>
+      <button id="pm-restart">Restart</button>
+      <button id="pm-quit">Main menu</button>
+    </div>
+  </div>
+
+  <div id="over" class="modal hidden">
+    <div class="panel narrow">
+      <h2 id="over-title">Gridlock</h2>
+      <div class="big" id="over-score">0</div>
+      <div class="muted">journeys</div>
+      <p id="over-best"></p>
+      <p class="muted" id="over-sub"></p>
+      <button id="over-retry" class="primary">Play again</button>
+      <button id="over-menu">Main menu</button>
+    </div>
+  </div>
+
+  <script>
+(() => {
+// ---- js/rng.js ----
+// Small seeded random number generator, so a map can be rebuilt from its seed.
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Stable 0..1 value per cell, for decoration that must not flicker.
+function hash2(x, y) {
+  let h = (x * 374761393 + y * 668265263) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+// ---- js/maps.js ----
+
+const LAND = 0;
+const WATER = 1;
+const MOUNTAIN = 2;
+
+const MAPS = [
+  { id: 'meadow', name: 'Meadowfield', blurb: 'Open farmland with a few ponds. A gentle start.' },
+  { id: 'delta', name: 'Saltmarsh Delta', blurb: 'A winding river and its creek split the land. Bridges are precious.' },
+  { id: 'ridge', name: 'Ironback Ridge', blurb: 'Two mountain ridges cut the valley. Tunnel through or find the pass.' },
+  { id: 'lakes', name: 'Glasswater', blurb: 'Scattered lakes and rocky outcrops. Water and stone at once.' },
+];
+
+// Builds the terrain grid for a map. Obstacles are kept away from the centre,
+// where the city starts.
+function generateTerrain(mapId, W, H, seed) {
+  const rnd = mulberry32((seed * 7 + 13) >>> 0);
+  const t = new Uint8Array(W * H);
+  const cx = W / 2, cy = H / 2;
+  const inMap = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+  const set = (x, y, v) => { if (inMap(x, y)) t[y * W + x] = v; };
+  const get = (x, y) => (inMap(x, y) ? t[y * W + x] : -1);
+
+  // Rivers and ridges run along the map's long axis or across it.
+  const long = W >= H;
+  const L = long ? W : H, S = long ? H : W;
+  const put = (q, p, v) => (long ? set(q, p, v) : set(p, q, v));
+  const at = (q, p) => (long ? get(q, p) : get(p, q));
+
+  const blob = (bx, by, r, v) => {
+    for (let y = Math.floor(by - r - 1); y <= Math.ceil(by + r + 1); y++)
+      for (let x = Math.floor(bx - r - 1); x <= Math.ceil(bx + r + 1); x++)
+        if (Math.hypot(x + 0.5 - bx, y + 0.5 - by) <= r + (rnd() - 0.5) * 0.8) set(x, y, v);
+  };
+  const awayFromCentre = (minD) => {
+    for (let k = 0; k < 300; k++) {
+      const x = 1 + rnd() * (W - 2), y = 1 + rnd() * (H - 2);
+      if (Math.hypot(x - cx, y - cy) >= minD) return [x, y];
+    }
+    return [2, 2];
+  };
+  const side = () => (rnd() < 0.5 ? 0.24 + rnd() * 0.08 : 0.68 + rnd() * 0.08);
+
+  if (mapId === 'meadow') {
+    for (let k = 0; k < 3; k++) { const [x, y] = awayFromCentre(6); blob(x, y, 1 + rnd() * 0.9, WATER); }
+    const [x, y] = awayFromCentre(8); blob(x, y, 1 + rnd() * 0.6, MOUNTAIN);
+  }
+
+  if (mapId === 'delta') {
+    // Main river along the long axis, off-centre.
+    let p = Math.floor(S * side());
+    let wide = rnd() < 0.5;
+    for (let q = 0; q < L; q++) {
+      if (rnd() < 0.08) wide = !wide;
+      const np = Math.max(1, Math.min(S - 3, p + (rnd() < 0.35 ? (rnd() < 0.5 ? -1 : 1) : 0)));
+      for (let k = Math.min(p, np); k <= Math.max(p, np); k++) { put(q, k, WATER); if (wide) put(q, k + 1, WATER); }
+      p = np;
+    }
+    // A creek from the far edge that runs until it meets the river.
+    const riverLow = p < S / 2;
+    let q = Math.floor(L * (rnd() < 0.5 ? 0.22 + rnd() * 0.1 : 0.68 + rnd() * 0.1));
+    const dir = riverLow ? -1 : 1;
+    for (let pp = riverLow ? S - 1 : 0; pp >= 0 && pp < S; pp += dir) {
+      if (at(q, pp) === WATER) break;
+      const nq = Math.max(1, Math.min(L - 2, q + (rnd() < 0.3 ? (rnd() < 0.5 ? -1 : 1) : 0)));
+      for (let k = Math.min(q, nq); k <= Math.max(q, nq); k++) put(k, pp, WATER);
+      q = nq;
+    }
+  }
+
+  if (mapId === 'ridge') {
+    for (const frac of [0.25 + rnd() * 0.06, 0.69 + rnd() * 0.06]) {
+      let q = Math.floor(L * frac);
+      const passAt = Math.floor(S * (0.3 + rnd() * 0.4));
+      const passLen = 2 + Math.floor(rnd() * 2);
+      for (let p = 0; p < S; p++) {
+        const nq = Math.max(1, Math.min(L - 3, q + (rnd() < 0.3 ? (rnd() < 0.5 ? -1 : 1) : 0)));
+        if (p < passAt || p >= passAt + passLen)
+          for (let k = Math.min(q, nq); k <= Math.max(q, nq) + 1; k++) put(k, p, MOUNTAIN);
+        q = nq;
+      }
+    }
+    for (let k = 0; k < 3; k++) { const [x, y] = awayFromCentre(6); blob(x, y, 0.9 + rnd() * 0.8, MOUNTAIN); }
+    const [x, y] = awayFromCentre(7); blob(x, y, 1.2, WATER);
+  }
+
+  if (mapId === 'lakes') {
+    for (let k = 0; k < 5; k++) { const [x, y] = awayFromCentre(6); blob(x, y, 1.4 + rnd() * 1.6, WATER); }
+    for (let k = 0; k < 2; k++) { const [x, y] = awayFromCentre(6); blob(x, y, 1.1 + rnd() * 0.9, MOUNTAIN); }
+  }
+
+  // Keep the starting area clear.
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++)
+      if (Math.hypot(x + 0.5 - cx, y + 0.5 - cy) < 2.6) t[y * W + x] = LAND;
+  return t;
+}
+
+// ---- js/game.js ----
+// Arterial: the simulation. No DOM here, so it runs in Node for tests.
+
+
+const COLORS = ['#ff6b6b', '#2ec4b6', '#ffbe0b', '#b388ff', '#4cc9f0', '#9ee06b'];
+const COLOR_NAMES = ['coral', 'teal', 'amber', 'violet', 'sky', 'lime'];
+
+const MODES = {
+  survival: {
+    id: 'survival', name: 'Survival',
+    blurb: 'Keep the city moving. A hub left overflowing too long ends the game.',
+    startRoads: 30, overflowTime: 40, growth: 1, gameOver: true, unlimited: false, erasePenalty: false, upgrades: true,
+  },
+  endless: {
+    id: 'endless', name: 'Endless',
+    blurb: 'No overflow timers. Build and rebuild for as long as you like.',
+    startRoads: 30, overflowTime: 40, growth: 1, gameOver: false, unlimited: false, erasePenalty: false, upgrades: true,
+  },
+  expert: {
+    id: 'expert', name: 'Expert',
+    blurb: 'Fewer tiles, faster growth, shorter timers, and every erased tile is lost for good.',
+    startRoads: 20, overflowTime: 26, growth: 1.35, gameOver: true, unlimited: false, erasePenalty: true, upgrades: true,
+  },
+  creative: {
+    id: 'creative', name: 'Creative',
+    blurb: 'Unlimited roads and infrastructure. No timers, no pressure.',
+    startRoads: 0, overflowTime: 40, growth: 1, gameOver: false, unlimited: true, erasePenalty: false, upgrades: false,
+  },
+};
+
+const WEEK = 60;            // seconds of game time per week
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const MAX_SPAN = 6;         // longest bridge or tunnel, in cells
+const MAX_PINS = 12;        // demand a hub can hold
+const OVER_AT = 8;          // demand at which the overflow timer runs
+const ROADS_PER_WEEK = 15;
+const DRIVE_LEFT = true;
+
+const GAP = 0.55;                  // minimum distance between cars in a lane
+const SPEED = 2.4;                 // cells per second on an ordinary road
+const MOTORWAY_SPEED = 2.4;        // multiple of SPEED
+const JUNCTIONS = {
+  plain: { cap: 1, t: 0.45 },      // one car at a time through a busy junction
+  roundabout: { cap: 3, t: 0.32 },
+  lights: { cap: 3, t: 0.28 },     // but only for the direction that is green
+};
+const LIGHT_CYCLE = 7;
+
+const ok = { ok: true };
+const fail = (reason) => ({ ok: false, reason });
+const edgeKey = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
+
+class Heap {
+  constructor() { this.a = []; }
+  get size() { return this.a.length; }
+  push(v, p) {
+    const a = this.a; a.push([p, v]);
+    let i = a.length - 1;
+    while (i > 0) { const j = (i - 1) >> 1; if (a[j][0] <= a[i][0]) break; [a[i], a[j]] = [a[j], a[i]]; i = j; }
+  }
+  pop() {
+    const a = this.a, top = a[0], last = a.pop();
+    if (a.length) {
+      a[0] = last; let i = 0;
+      for (;;) {
+        const l = 2 * i + 1, r = l + 1; let m = i;
+        if (l < a.length && a[l][0] < a[m][0]) m = l;
+        if (r < a.length && a[r][0] < a[m][0]) m = r;
+        if (m === i) break;
+        [a[i], a[m]] = [a[m], a[i]]; i = m;
+      }
+    }
+    return top;
+  }
+}
+
+class Game {
+  constructor({ mode = 'survival', mapId = 'meadow', seed = 1, portrait = false } = {}) {
+    this.mode = MODES[mode];
+    this.mapId = mapId;
+    this.seed = seed >>> 0;
+    this.W = portrait ? 22 : 32;
+    this.H = portrait ? 32 : 22;
+    this.rng = mulberry32(this.seed ^ 0xa5a5a5);
+    this.terrain = generateTerrain(mapId, this.W, this.H, this.seed);
+    const N = this.W * this.H;
+    this.cellB = new Int32Array(N).fill(-1);   // building id per cell
+    this.spanOf = new Map();                   // bridge/tunnel interior cell -> edge key
+    this.adj = new Map();                      // node -> Map(neighbour -> edge key)
+    this.edges = new Map();                    // key -> {a, b, kind, len, speed, interior}
+    this.features = new Map();                 // node -> 'roundabout' | 'lights'
+    this.lanes = new Map();                    // 'a>b' -> {a, b, edge, cars}
+    this.nodeOcc = new Map();                  // junction -> cars crossing it now
+    this.roadCells = 0;
+    this.buildings = [];
+    this.cars = [];
+    this.hasWater = this.terrain.includes(WATER);
+    this.hasMountain = this.terrain.includes(MOUNTAIN);
+    this.inv = {
+      roads: this.mode.startRoads, motorway: 0, roundabout: 0, lights: 0,
+      bridge: this.hasWater ? 2 : 0, tunnel: this.hasMountain ? 2 : 0,
+    };
+    if (this.mode.id === 'expert') { this.inv.bridge = Math.min(this.inv.bridge, 1); this.inv.tunnel = Math.min(this.inv.tunnel, 1); }
+    const bw = portrait ? 8 : 12, bh = portrait ? 12 : 8;
+    const x0 = Math.floor((this.W - bw) / 2), y0 = Math.floor((this.H - bh) / 2);
+    this.bounds = { x0, y0, x1: x0 + bw, y1: y0 + bh };
+    this.time = 0;
+    this.score = 0;
+    this.week = 1;
+    this.nextWeek = WEEK;
+    this.state = 'running';
+    this.colorsUsed = 0;
+    this.houseT = 5;
+    this.destT = 35;
+    this.dispatchT = 0;
+    this.replanCursor = 0;
+    this.choices = null;
+    this.failed = null;
+    this.listeners = {};
+    this.graphVersion = 0;
+    this.dt = 0;
+    this.spawnDest(this.pickDestColor());
+  }
+
+  // ---------- events ----------
+  on(name, fn) { (this.listeners[name] ||= []).push(fn); }
+  emit(name, ...args) { for (const fn of this.listeners[name] || []) fn(...args); }
+
+  // ---------- grid helpers ----------
+  idx(x, y) { return y * this.W + x; }
+  xy(i) { return [i % this.W, (i / this.W) | 0]; }
+  inMap(x, y) { return x >= 0 && y >= 0 && x < this.W && y < this.H; }
+  inBounds(i) {
+    const [x, y] = this.xy(i), b = this.bounds;
+    return x >= b.x0 && x < b.x1 && y >= b.y0 && y < b.y1;
+  }
+  deg(i) { const m = this.adj.get(i); return m ? m.size : 0; }
+  isRoadCell(i) { return this.cellB[i] < 0 && this.deg(i) > 0; }
+  isNode(i) { return i >= 0 && (this.cellB[i] >= 0 || this.deg(i) > 0); }
+  canPlace(i) { return this.terrain[i] === LAND && this.cellB[i] < 0 && this.deg(i) === 0 && !this.spanOf.has(i); }
+  building(i) { const b = this.cellB[i]; return b >= 0 ? this.buildings[b] : null; }
+  get dests() { return this.buildings.filter((b) => b.kind === 'dest'); }
+  get houses() { return this.buildings.filter((b) => b.kind === 'house'); }
+  roadsLeft() { return this.mode.unlimited ? Infinity : this.inv.roads - this.roadCells; }
+  has(item) { return this.mode.unlimited || this.inv[item] > 0; }
+  take(item) { if (!this.mode.unlimited) this.inv[item]--; }
+  give(item) { if (!this.mode.unlimited) this.inv[item]++; }
+
+  newCellsNeeded(cells) {
+    let n = 0;
+    for (const c of new Set(cells)) if (this.cellB[c] < 0 && this.deg(c) === 0) n++;
+    return n;
+  }
+
+  // ---------- graph edits ----------
+  link(a, b, kind, len, speed, interior = []) {
+    const key = edgeKey(a, b);
+    for (const n of [a, b]) {
+      if (this.deg(n) === 0) { this.adj.set(n, new Map()); if (this.cellB[n] < 0) this.roadCells++; }
+    }
+    this.adj.get(a).set(b, key);
+    this.adj.get(b).set(a, key);
+    this.edges.set(key, { a, b, kind, len, speed, interior });
+    for (const c of interior) this.spanOf.set(c, key);
+    return key;
+  }
+
+  removeEdge(key) {
+    const e = this.edges.get(key);
+    if (!e) return;
+    for (const lk of [e.a + '>' + e.b, e.b + '>' + e.a]) {
+      const lane = this.lanes.get(lk);
+      if (lane) { for (const c of lane.cars.slice()) this.sendHome(c); this.lanes.delete(lk); }
+    }
+    this.edges.delete(key);
+    for (const c of e.interior) this.spanOf.delete(c);
+    if (e.kind !== 'road') this.give(e.kind);
+    for (const [n, m] of [[e.a, e.b], [e.b, e.a]]) {
+      const nb = this.adj.get(n);
+      if (!nb) continue;
+      nb.delete(m);
+      if (nb.size === 0) {
+        this.adj.delete(n);
+        if (this.cellB[n] < 0) this.roadCells--;
+        const f = this.features.get(n);
+        if (f) { this.features.delete(n); this.give(f); }
+      }
+    }
+  }
+
+  changed() {
+    this.graphVersion++;
+    for (const c of this.cars) this.replanCar(c);
+    this.emit('change');
+  }
+
+  // Road between two neighbouring cells (8 directions).
+  buildRoad(a, b) {
+    if (a === b) return ok;
+    const [ax, ay] = this.xy(a), [bx, by] = this.xy(b);
+    const dx = bx - ax, dy = by - ay;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) !== 1) return fail('Roads join neighbouring cells');
+    if (!this.inBounds(a) || !this.inBounds(b)) return fail('Outside the city limits');
+    if (this.terrain[a] !== LAND || this.terrain[b] !== LAND) return fail('Needs a bridge or tunnel');
+    if (this.spanOf.has(a) || this.spanOf.has(b)) return fail('A bridge or tunnel is in the way');
+    if (this.cellB[a] >= 0 && this.cellB[a] === this.cellB[b]) return ok;
+    const key = edgeKey(a, b);
+    if (this.edges.has(key)) return ok;
+    if (dx && dy) {
+      const c1 = this.idx(ax + dx, ay), c2 = this.idx(ax, ay + dy);
+      if (this.terrain[c1] !== LAND && this.terrain[c2] !== LAND) return fail('Too tight to squeeze through');
+      if (this.edges.has(edgeKey(c1, c2))) return fail('Roads cannot cross without a junction');
+      if (this.cellB[c1] >= 0 && this.cellB[c1] === this.cellB[c2]) return fail('That cuts through a building');
+    }
+    if (this.newCellsNeeded([a, b]) > this.roadsLeft()) return fail('Out of road tiles');
+    this.link(a, b, 'road', dx && dy ? Math.SQRT2 : 1, 1);
+    this.changed();
+    return ok;
+  }
+
+  spanCells(a, b) {
+    const [ax, ay] = this.xy(a), [bx, by] = this.xy(b);
+    const k = Math.max(Math.abs(bx - ax), Math.abs(by - ay));
+    const sx = Math.sign(bx - ax), sy = Math.sign(by - ay);
+    if (k < 2 || bx - ax !== sx * k || by - ay !== sy * k) return null;
+    const cells = [];
+    for (let j = 1; j < k; j++) cells.push(this.idx(ax + sx * j, ay + sy * j));
+    return cells;
+  }
+
+  // Bridge over water or tunnel through rock, in a straight line.
+  buildSpan(a, b) {
+    const interior = this.spanCells(a, b);
+    if (!interior) return fail('Bridges and tunnels run in a straight line');
+    if (interior.length > MAX_SPAN) return fail(`Too long: at most ${MAX_SPAN} cells`);
+    if (this.terrain[a] !== LAND || this.terrain[b] !== LAND) return fail('Both ends need dry, open ground');
+    if (this.spanOf.has(a) || this.spanOf.has(b)) return fail('Both ends need dry, open ground');
+    if (![a, b, ...interior].every((c) => this.inBounds(c))) return fail('Outside the city limits');
+    const type = this.terrain[interior[0]];
+    if (type === LAND) return fail('Nothing to cross');
+    if (!interior.every((c) => this.terrain[c] === type && !this.spanOf.has(c) && this.cellB[c] < 0))
+      return fail('A crossing must span one kind of obstacle');
+    const kind = type === WATER ? 'bridge' : 'tunnel';
+    if (!this.has(kind)) return fail(kind === 'bridge' ? 'No bridges left' : 'No tunnels left');
+    const key = edgeKey(a, b);
+    if (this.edges.has(key)) return ok;
+    if (this.newCellsNeeded([a, b]) > this.roadsLeft()) return fail('Out of road tiles');
+    const [ax, ay] = this.xy(a), [bx, by] = this.xy(b);
+    this.take(kind);
+    this.link(a, b, kind, Math.hypot(bx - ax, by - ay), 1, interior);
+    this.changed();
+    return ok;
+  }
+
+  canMotorway(a, b) {
+    if (a === b || a < 0 || b < 0) return fail('Drag from one road to another');
+    if (!this.isNode(a) || !this.isNode(b)) return fail('Motorways join existing roads or buildings');
+    if (!this.inBounds(a) || !this.inBounds(b)) return fail('Outside the city limits');
+    const [ax, ay] = this.xy(a), [bx, by] = this.xy(b);
+    if (Math.hypot(bx - ax, by - ay) < 3) return fail('Too short for a motorway');
+    if (this.edges.has(edgeKey(a, b))) return fail('Already joined');
+    if (!this.has('motorway')) return fail('No motorways left');
+    return ok;
+  }
+
+  buildMotorway(a, b) {
+    const r = this.canMotorway(a, b);
+    if (!r.ok) return r;
+    const [ax, ay] = this.xy(a), [bx, by] = this.xy(b);
+    this.take('motorway');
+    this.link(a, b, 'motorway', Math.hypot(bx - ax, by - ay), MOTORWAY_SPEED);
+    this.changed();
+    return ok;
+  }
+
+  toggleFeature(i, kind) {
+    if (i < 0 || !this.isRoadCell(i)) return fail(kind === 'lights' ? 'Lights go on a road junction' : 'Roundabouts go on a road junction');
+    const cur = this.features.get(i);
+    if (cur === kind) { this.features.delete(i); this.give(kind); this.changed(); return ok; }
+    if (cur) return fail('That junction already has ' + (cur === 'lights' ? 'traffic lights' : 'a roundabout'));
+    if (!this.has(kind)) return fail(kind === 'lights' ? 'No traffic lights left' : 'No roundabouts left');
+    this.take(kind);
+    this.features.set(i, kind);
+    this.changed();
+    return ok;
+  }
+
+  // Remove everything built on a cell. Returns true if anything changed.
+  eraseCell(i) {
+    if (i < 0) return false;
+    if (this.spanOf.has(i)) { this.removeEdge(this.spanOf.get(i)); this.changed(); return true; }
+    const nb = this.adj.get(i);
+    if (!nb) return false;
+    const wasRoad = this.cellB[i] < 0;
+    for (const key of [...nb.values()]) this.removeEdge(key);
+    if (wasRoad && this.mode.erasePenalty) this.inv.roads = Math.max(0, this.inv.roads - 1);
+    this.changed();
+    return true;
+  }
+
+  // ---------- routing ----------
+  edgeCost(e, laneKey, to) {
+    const lane = this.lanes.get(laneKey);
+    let w = e.len / e.speed + 0.45 * (lane ? lane.cars.length : 0);
+    if (this.deg(to) >= 3 && !this.features.has(to)) w += 0.25;
+    return w;
+  }
+
+  // Cheapest route from start to any of the target cells. Never passes
+  // through a building on the way.
+  findPath(start, targets) {
+    if (targets.has(start)) return [start];
+    const dist = new Map([[start, 0]]), prev = new Map(), heap = new Heap();
+    heap.push(start, 0);
+    while (heap.size) {
+      const [d, n] = heap.pop();
+      if (d > dist.get(n)) continue;
+      if (targets.has(n)) {
+        const path = [n];
+        let p = n;
+        while (prev.has(p)) { p = prev.get(p); path.push(p); }
+        return path.reverse();
+      }
+      if (n !== start && this.cellB[n] >= 0) continue;
+      const nb = this.adj.get(n);
+      if (!nb) continue;
+      for (const [m, key] of nb) {
+        const nd = d + this.edgeCost(this.edges.get(key), n + '>' + m, m);
+        if (nd < (dist.get(m) ?? Infinity)) { dist.set(m, nd); prev.set(m, n); heap.push(m, nd); }
+      }
+    }
+    return null;
+  }
+
+  // Travel cost from every reachable node to the sources (cars drive toward them).
+  distancesTo(sources) {
+    const dist = new Map(), heap = new Heap();
+    for (const s of sources) { dist.set(s, 0); heap.push(s, 0); }
+    while (heap.size) {
+      const [d, n] = heap.pop();
+      if (d > dist.get(n)) continue;
+      if (!sources.has(n) && this.cellB[n] >= 0) continue;
+      const nb = this.adj.get(n);
+      if (!nb) continue;
+      for (const [m, key] of nb) {
+        const nd = d + this.edgeCost(this.edges.get(key), m + '>' + n, n);
+        if (nd < (dist.get(m) ?? Infinity)) { dist.set(m, nd); heap.push(m, nd); }
+      }
+    }
+    return dist;
+  }
+
+  // ---------- spawning ----------
+  pickDestColor() {
+    const want = Math.min(COLORS.length, 2 + Math.floor(this.time / 150));
+    if (this.colorsUsed < want) return this.colorsUsed;
+    let best = 0, bestV = -1;
+    for (let c = 0; c < this.colorsUsed; c++) {
+      const d = this.dests.filter((b) => b.color === c).length || 1;
+      const h = this.houses.filter((b) => b.color === c).length;
+      const v = (h + 1) / d + this.rng() * 0.5;
+      if (v > bestV) { bestV = v; best = c; }
+    }
+    return best;
+  }
+
+  pickHouseColor() {
+    const w = [];
+    let total = 0;
+    for (let c = 0; c < this.colorsUsed; c++) {
+      const d = this.dests.filter((b) => b.color === c).length;
+      const h = this.houses.filter((b) => b.color === c).length;
+      const v = (d * 3) / (h + 1);
+      w.push(v); total += v;
+    }
+    let r = this.rng() * total;
+    for (let c = 0; c < w.length; c++) { r -= w[c]; if (r <= 0) return c; }
+    return 0;
+  }
+
+  rectDist(x, y, b) {
+    const dx = Math.max(b.x - x, 0, x - (b.x + b.w - 1));
+    const dy = Math.max(b.y - y, 0, y - (b.y + b.h - 1));
+    return Math.max(dx, dy);
+  }
+
+  addBuilding(kind, color, x, y, w, h) {
+    const b = { id: this.buildings.length, kind, color, x, y, w, h, cells: [], born: this.time };
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const c = this.idx(x + i, y + j); b.cells.push(c); this.cellB[c] = b.id; }
+    this.buildings.push(b);
+    return b;
+  }
+
+  spawnHouse(color, maxD = 8) {
+    const dests = this.dests.filter((b) => b.color === color);
+    if (!dests.length) return null;
+    const houses = this.houses;
+    const B = this.bounds;
+    const cand = [], weight = [];
+    let total = 0;
+    for (let y = B.y0; y < B.y1; y++) for (let x = B.x0; x < B.x1; x++) {
+      const i = this.idx(x, y);
+      if (!this.canPlace(i)) continue;
+      let open = 0;
+      for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + ox, ny = y + oy;
+        if (!this.inMap(nx, ny)) continue;
+        const j = this.idx(nx, ny);
+        if (this.inBounds(j) && (this.canPlace(j) || this.isRoadCell(j))) open++;
+      }
+      if (open < 2) continue;
+      let dmin = Infinity, tooClose = false;
+      for (const d of this.dests) {
+        const r = this.rectDist(x, y, d);
+        if (r < 2) tooClose = true;
+        if (d.color === color) dmin = Math.min(dmin, r);
+      }
+      if (tooClose || dmin > maxD) continue;
+      let near = 0, other = 0;
+      for (const h of houses) {
+        const r = Math.max(Math.abs(h.x - x), Math.abs(h.y - y));
+        if (r <= 2 && h.color === color) near++;
+        if (r <= 1 && h.color !== color) other++;
+      }
+      let v = 1 + 2 * Math.min(near, 3) - (other ? 0.8 : 0);
+      if (dmin <= 5) v *= 1.5;
+      cand.push([x, y]); weight.push(v); total += v;
+    }
+    if (!cand.length) return maxD < 14 ? this.spawnHouse(color, maxD + 3) : null;
+    let r = this.rng() * total, k = 0;
+    while (k < cand.length - 1 && (r -= weight[k]) > 0) k++;
+    const [x, y] = cand[k];
+    const h = this.addBuilding('house', color, x, y, 1, 1);
+    h.cars = [];
+    for (let n = 0; n < 2; n++) {
+      const car = { id: this.cars.length, house: h, color, state: 'home', path: null, i: 0, atNode: false, lane: null, dist: 0, wait: 0, crossNode: null, stuck: 0, target: null, parkT: 0, node: -1, lost: 0, moving: false };
+      h.cars.push(car); this.cars.push(car);
+    }
+    this.emit('spawn', h);
+    return h;
+  }
+
+  spawnDest(color, minGap = 6) {
+    const B = this.bounds;
+    const first = this.buildings.length === 0;
+    const cx = (B.x0 + B.x1) / 2, cy = (B.y0 + B.y1) / 2;
+    const cand = [];
+    for (let y = B.y0 + 1; y < B.y1 - 2; y++) for (let x = B.x0 + 1; x < B.x1 - 2; x++) {
+      const cells = [this.idx(x, y), this.idx(x + 1, y), this.idx(x, y + 1), this.idx(x + 1, y + 1)];
+      if (!cells.every((c) => this.canPlace(c))) continue;
+      let okSpot = true;
+      for (const d of this.dests) if (Math.hypot(d.x - x, d.y - y) < minGap) { okSpot = false; break; }
+      for (const h of this.houses) if (this.rectDist(h.x, h.y, { x, y, w: 2, h: 2 }) < 2) { okSpot = false; break; }
+      if (!okSpot) continue;
+      const score = first ? -Math.hypot(x + 1 - cx, y + 1 - cy) + this.rng() * 1.5 : this.rng();
+      cand.push([score, x, y]);
+    }
+    if (!cand.length) return minGap > 4 ? this.spawnDest(color, minGap - 1) : null;
+    cand.sort((p, q) => q[0] - p[0]);
+    const [, x, y] = cand[0];
+    const d = this.addBuilding('dest', color, x, y, 2, 2);
+    if (color >= this.colorsUsed) this.colorsUsed = color + 1;
+    d.pins = 0; d.assigned = 0; d.over = 0; d.pinT = 0.6; d.flash = 0;
+    this.emit('spawn', d);
+    for (let n = 0; n < 2; n++) this.spawnHouse(color);
+    return d;
+  }
+
+  demandRate(d) {
+    const minutes = this.time / 60;
+    const interval = Math.max(3, 11 - minutes * 0.55) / this.mode.growth;
+    const ds = this.dests.filter((b) => b.color === d.color).length || 1;
+    const hs = this.houses.filter((b) => b.color === d.color).length;
+    const factor = Math.min(1.5, Math.max(0.6, 0.5 + 0.15 * (hs / ds)));
+    return factor / interval;
+  }
+
+  expandBounds() {
+    const b = this.bounds;
+    b.x0 = Math.max(0, b.x0 - 2); b.y0 = Math.max(0, b.y0 - 2);
+    b.x1 = Math.min(this.W, b.x1 + 2); b.y1 = Math.min(this.H, b.y1 + 2);
+  }
+
+  makeChoices() {
+    const pool = [
+      { item: 'roads', n: 20, label: 'Road crew', desc: '+20 road tiles' },
+      { item: 'motorway', n: 1, label: 'Motorway', desc: 'A fast link between any two roads' },
+      { item: 'roundabout', n: 2, label: 'Roundabouts', desc: '2 roundabouts: busy junctions flow' },
+      { item: 'lights', n: 2, label: 'Traffic lights', desc: '2 sets of lights: take turns, in bulk' },
+    ];
+    if (this.hasWater) pool.push({ item: 'bridge', n: 2, label: 'Bridges', desc: '2 bridges over water' });
+    if (this.hasMountain) pool.push({ item: 'tunnel', n: 2, label: 'Tunnels', desc: '2 tunnels through rock' });
+    const picks = [];
+    while (picks.length < 2) {
+      const p = pool[Math.floor(this.rng() * pool.length)];
+      if (!picks.includes(p)) picks.push(p);
+    }
+    return picks;
+  }
+
+  chooseUpgrade(k) {
+    const c = this.choices && this.choices[k];
+    if (!c) return;
+    this.inv[c.item] += c.n;
+    this.choices = null;
+    this.state = 'running';
+    this.emit('change');
+  }
+
+  endWeek() {
+    this.week++;
+    this.nextWeek += WEEK;
+    this.expandBounds();
+    if (!this.mode.upgrades) { this.emit('week'); return; }
+    this.inv.roads += ROADS_PER_WEEK;
+    this.choices = this.makeChoices();
+    this.state = 'upgrade';
+    this.emit('upgrade', this.choices);
+  }
+
+  // ---------- simulation ----------
+  lightPhase(n) {
+    const t = (this.time + (n * 0.37) % LIGHT_CYCLE) % LIGHT_CYCLE, half = LIGHT_CYCLE / 2;
+    if (t < half - 0.5) return 0;
+    if (t < half) return -1;
+    if (t < LIGHT_CYCLE - 0.5) return 1;
+    return -1;
+  }
+
+  // Returns null (no control), false (must wait) or the junction spec.
+  junctionSpec(n, from) {
+    if (this.cellB[n] >= 0) return null;
+    const f = this.features.get(n);
+    if (!f && this.deg(n) < 3) return null;
+    const spec = JUNCTIONS[f || 'plain'];
+    if (f === 'lights') {
+      const [nx, ny] = this.xy(n), [fx, fy] = this.xy(from);
+      const axis = Math.abs(nx - fx) >= Math.abs(ny - fy) ? 0 : 1;
+      if (this.lightPhase(n) !== axis) return false;
+    }
+    return (this.nodeOcc.get(n) || 0) < spec.cap ? spec : false;
+  }
+
+  getLane(a, b) {
+    const k = a + '>' + b;
+    let l = this.lanes.get(k);
+    if (!l) { l = { a, b, edge: this.edges.get(edgeKey(a, b)), cars: [] }; this.lanes.set(k, l); }
+    return l;
+  }
+
+  releaseNode(c) {
+    if (c.crossNode == null) return;
+    const v = (this.nodeOcc.get(c.crossNode) || 1) - 1;
+    if (v > 0) this.nodeOcc.set(c.crossNode, v); else this.nodeOcc.delete(c.crossNode);
+    c.crossNode = null;
+    c.wait = 0;
+  }
+
+  leaveLane(c) {
+    if (!c.lane) return;
+    const arr = c.lane.cars, k = arr.indexOf(c);
+    if (k >= 0) arr.splice(k, 1);
+    c.lane = null;
+  }
+
+  sendHome(c) {
+    this.leaveLane(c);
+    this.releaseNode(c);
+    if (c.state === 'out' && c.target) c.target.assigned = Math.max(0, c.target.assigned - 1);
+    c.state = 'home'; c.path = null; c.atNode = false; c.target = null; c.stuck = 0;
+  }
+
+  replanCar(c) {
+    if (c.state !== 'out' && c.state !== 'back') return;
+    const homeSet = () => new Set(c.house.cells);
+    const targets = c.state === 'out' ? new Set(c.target.cells) : homeSet();
+    if (c.atNode) {
+      const n = c.path[c.i];
+      const p = this.findPath(n, targets);
+      if (p) { c.path = p; c.i = 0; return; }
+      if (c.state === 'out') {
+        if (this.cellB[n] === c.house.id) { this.sendHome(c); return; }
+        c.target.assigned = Math.max(0, c.target.assigned - 1);
+        c.state = 'back'; c.target = null;
+        const q = this.findPath(n, homeSet());
+        if (q) { c.path = q; c.i = 0; return; }
+      }
+      if (this.cellB[n] >= 0) { c.atNode = false; c.state = 'park'; c.parkT = 1; c.node = n; return; }
+      this.sendHome(c);
+      return;
+    }
+    if (!c.lane) return;
+    const head = c.path[c.i], next = c.path[c.i + 1];
+    let tail = this.findPath(next, targets);
+    if (!tail && c.state === 'out') {
+      c.target.assigned = Math.max(0, c.target.assigned - 1);
+      c.state = 'back'; c.target = null;
+      tail = this.findPath(next, homeSet());
+    }
+    if (!tail) { this.sendHome(c); return; }
+    c.path = [head, ...tail];
+    c.i = 0;
+  }
+
+  dispatch() {
+    const dests = this.dests.filter((d) => d.pins - d.assigned > 0)
+      .sort((p, q) => (q.pins - q.assigned) - (p.pins - p.assigned));
+    for (const d of dests) {
+      let need = d.pins - d.assigned;
+      const homes = this.houses.filter((h) => h.color === d.color && h.cars.some((c) => c.state === 'home'));
+      if (!homes.length) continue;
+      const targets = new Set(d.cells);
+      const dist = this.distancesTo(targets);
+      const reach = homes.filter((h) => dist.has(h.cells[0])).sort((p, q) => dist.get(p.cells[0]) - dist.get(q.cells[0]));
+      for (const h of reach) {
+        if (need <= 0) break;
+        for (const c of h.cars) {
+          if (need <= 0 || c.state !== 'home') continue;
+          const path = this.findPath(h.cells[0], targets);
+          if (!path) break;
+          c.state = 'out'; c.target = d; c.path = path; c.i = 0; c.atNode = true; c.stuck = 0;
+          d.assigned++; need--;
+        }
+      }
+    }
+  }
+
+  // Move car c from node path[i] onto the lane path[i] > path[i+1].
+  tryEnter(c, i, from) {
+    const n = c.path[i], m = c.path[i + 1];
+    if (m === undefined) { this.arrive(c); return true; }
+    if (!this.edges.has(edgeKey(n, m))) { this.replanCar(c); return false; }
+    const lane = this.getLane(n, m);
+    const last = lane.cars[lane.cars.length - 1];
+    if (last && last !== c && last.dist < GAP && c.stuck < 12) { c.stuck += this.dt; return false; }
+    let spec = null;
+    if (from != null) {
+      spec = this.junctionSpec(n, from);
+      if (spec === false) { c.stuck += this.dt; return false; }
+    }
+    this.leaveLane(c);
+    this.releaseNode(c);
+    c.lane = lane; c.dist = 0; c.i = i; c.atNode = false; c.stuck = 0;
+    lane.cars.push(c);
+    if (spec) { c.wait = spec.t; c.crossNode = n; this.nodeOcc.set(n, (this.nodeOcc.get(n) || 0) + 1); }
+    return true;
+  }
+
+  arrive(c) {
+    const node = c.path[c.path.length - 1];
+    this.leaveLane(c);
+    this.releaseNode(c);
+    c.atNode = false; c.node = node; c.stuck = 0;
+    if (c.state === 'out') {
+      const d = c.target;
+      d.pins = Math.max(0, d.pins - 1);
+      d.assigned = Math.max(0, d.assigned - 1);
+      d.flash = 1;
+      this.score++;
+      this.emit('delivered', d);
+      c.state = 'park'; c.parkT = 0.9; c.lost = 0; c.target = null;
+    } else {
+      c.state = 'home'; c.path = null;
+    }
+  }
+
+  leavePark(c) {
+    const p = this.findPath(c.node, new Set(c.house.cells));
+    if (p) { c.state = 'back'; c.path = p; c.i = 0; c.atNode = true; return; }
+    c.parkT = 1; c.lost++;
+    if (c.lost > 8) this.sendHome(c);
+  }
+
+  moveCars(dt) {
+    for (const lane of this.lanes.values()) {
+      if (!lane.cars.length) continue;
+      const len = lane.edge.len, step = SPEED * lane.edge.speed * dt;
+      let ahead = null;
+      for (const c of lane.cars.slice()) {
+        if (c.lane !== lane) continue;
+        c.moving = false;
+        if (c.wait > 0) {
+          c.wait -= dt;
+          if (c.wait <= 0) this.releaseNode(c);
+          ahead = c;
+          continue;
+        }
+        const limit = ahead ? ahead.dist - GAP : len;
+        if (c.dist < limit) { c.dist = Math.min(limit, c.dist + step); c.moving = true; }
+        if (!ahead && c.dist >= len - 1e-6) {
+          const i = c.i + 1;
+          const done = i === c.path.length - 1 ? (this.arrive(c), true) : this.tryEnter(c, i, c.path[c.i]);
+          if (done) continue;
+        }
+        ahead = c;
+      }
+    }
+    for (const c of this.cars) {
+      if (c.state === 'park') { c.parkT -= dt; if (c.parkT <= 0) this.leavePark(c); }
+      else if (c.atNode && (c.state === 'out' || c.state === 'back')) this.tryEnter(c, c.i, null);
+    }
+    // Reroute a few cars each tick so traffic spreads onto quieter roads.
+    const moving = this.cars.length;
+    for (let k = 0; k < 3 && moving; k++) {
+      this.replanCursor = (this.replanCursor + 1) % moving;
+      const c = this.cars[this.replanCursor];
+      if (c.lane && c.wait <= 0 && c.dist < c.lane.edge.len * 0.6) this.replanCar(c);
+    }
+  }
+
+  step(dt) {
+    if (this.state !== 'running') return;
+    this.dt = dt;
+    this.time += dt;
+    const minutes = this.time / 60, g = this.mode.growth;
+
+    this.houseT -= dt * g;
+    if (this.houseT <= 0) {
+      const c = this.pickHouseColor();
+      const hs = this.houses.filter((b) => b.color === c).length;
+      const ds = this.dests.filter((b) => b.color === c).length;
+      if (hs < ds * 7) this.spawnHouse(c);
+      this.houseT = Math.max(4.5, 10 - minutes * 0.45) * (0.7 + this.rng() * 0.6);
+    }
+    this.destT -= dt * g;
+    if (this.destT <= 0) {
+      const placed = this.spawnDest(this.pickDestColor());
+      this.destT = placed ? Math.max(40, 70 - minutes * 2) * (0.8 + this.rng() * 0.4) : 5;
+    }
+
+    for (const d of this.dests) {
+      d.pinT -= dt * this.demandRate(d);
+      if (d.pinT <= 0) { d.pinT += 1; if (d.pins < MAX_PINS) d.pins++; }
+      if (this.mode.gameOver) {
+        if (d.pins >= OVER_AT) d.over += dt; else d.over = Math.max(0, d.over - dt * 0.6);
+        if (d.over >= this.mode.overflowTime) { this.state = 'over'; this.failed = d; this.emit('over', d); return; }
+      }
+    }
+
+    this.dispatchT -= dt;
+    if (this.dispatchT <= 0) { this.dispatch(); this.dispatchT = 0.4; }
+    this.moveCars(dt);
+
+    if (this.time >= this.nextWeek) this.endWeek();
+  }
+
+  get dayName() { return DAYS[Math.min(6, Math.floor(((this.time % WEEK) / WEEK) * 7))]; }
+  get weekProgress() { return (this.time % WEEK) / WEEK; }
+}
+
+// ---- js/render.js ----
+// Draws the game onto a canvas. World units are cells; cell (x, y) spans
+// [x, x+1) and its centre is (x+0.5, y+0.5).
+
+
+
+const PALETTE = {
+  bg: '#0a1017', landOut: '#0e151d', land: '#141d27', dot: '#223040',
+  water: '#123247', waterOut: '#0d2030', wave: '#1f4c68',
+  rock: '#242a35', rockOut: '#151a22', rockGlyph: '#3a4252', rockGlyphOut: '#222833',
+  road: '#4a5a6e', rail: '#8ea3b8', motor: '#f2b134', border: '#2b3d52',
+};
+const P = PALETTE;
+
+class Renderer {
+  constructor(canvas) {
+    this.cv = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.fit = null;
+    this.zoom = 1;
+    this.pan = { x: 0, y: 0 };
+    this.insets = { top: 72, bottom: 100, left: 14, right: 14 };
+    this.s = 30; this.ox = 0; this.oy = 0;
+    this.resize();
+  }
+
+  resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    this.dpr = dpr;
+    this.vw = window.innerWidth;
+    this.vh = window.innerHeight;
+    this.cv.width = Math.round(this.vw * dpr);
+    this.cv.height = Math.round(this.vh * dpr);
+    this.cv.style.width = this.vw + 'px';
+    this.cv.style.height = this.vh + 'px';
+  }
+
+  area() {
+    const I = this.insets;
+    return { aw: Math.max(60, this.vw - I.left - I.right), ah: Math.max(60, this.vh - I.top - I.bottom) };
+  }
+
+  targetFit(g) {
+    const b = g.bounds, { aw, ah } = this.area();
+    const bw = b.x1 - b.x0 + 0.6, bh = b.y1 - b.y0 + 0.6;
+    return { x: (b.x0 + b.x1) / 2, y: (b.y0 + b.y1) / 2, s: Math.min(aw / bw, ah / bh) };
+  }
+
+  update(g, dt) {
+    const t = this.targetFit(g);
+    if (!this.fit) this.fit = { ...t };
+    else {
+      const k = 1 - Math.exp(-dt * 3.5);
+      this.fit.x += (t.x - this.fit.x) * k;
+      this.fit.y += (t.y - this.fit.y) * k;
+      this.fit.s += (t.s - this.fit.s) * k;
+    }
+    this.layout(g);
+  }
+
+  layout(g) {
+    const I = this.insets, { aw, ah } = this.area();
+    this.s = this.fit.s * this.zoom;
+    if (this.zoom <= 1.0001) { this.pan.x = 0; this.pan.y = 0; }
+    else if (g) {
+      this.pan.x = Math.max(-g.W / 2, Math.min(g.W / 2, this.pan.x));
+      this.pan.y = Math.max(-g.H / 2, Math.min(g.H / 2, this.pan.y));
+    }
+    const cx = this.fit.x + this.pan.x, cy = this.fit.y + this.pan.y;
+    this.ox = I.left + aw / 2 - cx * this.s;
+    this.oy = I.top + ah / 2 - cy * this.s;
+  }
+
+  toWorld(px, py) { return [(px - this.ox) / this.s, (py - this.oy) / this.s]; }
+
+  cellAt(g, px, py) {
+    const [wx, wy] = this.toWorld(px, py);
+    const x = Math.floor(wx), y = Math.floor(wy);
+    return g.inMap(x, y) ? g.idx(x, y) : -1;
+  }
+
+  // Zoom so that world point (wx, wy) sits under screen point (px, py).
+  setView(g, zoom, wx, wy, px, py) {
+    if (!this.fit) return;
+    const I = this.insets, { aw, ah } = this.area();
+    this.zoom = Math.max(1, Math.min(5, zoom));
+    const s = this.fit.s * this.zoom;
+    const ox = px - wx * s, oy = py - wy * s;
+    this.pan.x = (I.left + aw / 2 - ox) / s - this.fit.x;
+    this.pan.y = (I.top + ah / 2 - oy) / s - this.fit.y;
+    this.layout(g);
+  }
+
+  zoomAt(g, px, py, factor) {
+    const [wx, wy] = this.toWorld(px, py);
+    this.setView(g, this.zoom * factor, wx, wy, px, py);
+  }
+
+  resetView() { this.zoom = 1; this.pan = { x: 0, y: 0 }; }
+
+  center(g, i) { return [(i % g.W) + 0.5, ((i / g.W) | 0) + 0.5]; }
+
+  carPose(g, c) {
+    const l = c.lane;
+    const [ax, ay] = this.center(g, l.a), [bx, by] = this.center(g, l.b);
+    const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+    const t = Math.min(1, c.dist / l.edge.len);
+    const ux = dx / L, uy = dy / L, off = l.edge.kind === 'motorway' ? 0.11 : 0.14;
+    const side = DRIVE_LEFT ? 1 : -1;
+    return { x: ax + dx * t + uy * off * side, y: ay + dy * t - ux * off * side, ang: Math.atan2(dy, dx) };
+  }
+
+  draw(g, ui, dt) {
+    const ctx = this.ctx, dpr = this.dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = P.bg;
+    ctx.fillRect(0, 0, this.vw, this.vh);
+    ctx.setTransform(dpr * this.s, 0, 0, dpr * this.s, dpr * this.ox, dpr * this.oy);
+    this.lw = 1 / this.s; // one screen pixel, in cells
+
+    this.drawTerrain(g);
+    this.drawRoads(g);
+    this.drawPreview(g, ui);
+    this.drawBuildings(g, dt);
+    this.drawCars(g);
+    this.drawAlerts(g);
+    if (ui.hover >= 0 && ui.hoverTool) this.drawHover(g, ui);
+  }
+
+  drawTerrain(g) {
+    const ctx = this.ctx, b = g.bounds, W = g.W, H = g.H;
+    ctx.fillStyle = P.landOut;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = P.land;
+    ctx.beginPath();
+    ctx.roundRect(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0, 0.35);
+    ctx.fill();
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const t = g.terrain[y * W + x];
+      if (t === LAND) continue;
+      const inb = x >= b.x0 && x < b.x1 && y >= b.y0 && y < b.y1;
+      if (t === WATER) {
+        ctx.fillStyle = inb ? P.water : P.waterOut;
+        ctx.fillRect(x - 0.01, y - 0.01, 1.02, 1.02);
+        const h = hash2(x, y);
+        if (h < 0.4) {
+          ctx.strokeStyle = P.wave; ctx.lineWidth = 0.06;
+          const wx = x + 0.25 + h * 0.6, wy = y + 0.35 + hash2(y, x) * 0.4;
+          ctx.beginPath(); ctx.moveTo(wx - 0.18, wy);
+          ctx.quadraticCurveTo(wx - 0.09, wy - 0.09, wx, wy); ctx.quadraticCurveTo(wx + 0.09, wy + 0.09, wx + 0.18, wy);
+          ctx.stroke();
+        }
+      } else if (t === MOUNTAIN) {
+        ctx.fillStyle = inb ? P.rock : P.rockOut;
+        ctx.fillRect(x - 0.01, y - 0.01, 1.02, 1.02);
+        ctx.fillStyle = inb ? P.rockGlyph : P.rockGlyphOut;
+        const h = hash2(x, y), s = 0.5 + h * 0.25, px = x + 0.5 + (h - 0.5) * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(px - s / 2, y + 0.78); ctx.lineTo(px, y + 0.78 - s * 0.95); ctx.lineTo(px + s / 2, y + 0.78);
+        ctx.fill();
+      }
+    }
+    // dot grid on open ground
+    ctx.fillStyle = P.dot;
+    for (let y = b.y0; y < b.y1; y++) for (let x = b.x0; x < b.x1; x++) {
+      const i = y * W + x;
+      if (g.terrain[i] === LAND && g.cellB[i] < 0 && !g.adj.has(i)) ctx.fillRect(x + 0.46, y + 0.46, 0.08, 0.08);
+    }
+    ctx.strokeStyle = P.border; ctx.lineWidth = Math.max(0.04, this.lw * 1.5);
+    ctx.setLineDash([0.25, 0.2]);
+    ctx.beginPath(); ctx.roundRect(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0, 0.35); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  drawRoads(g) {
+    const ctx = this.ctx;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const ground = new Path2D(), rails = new Path2D(), tunnels = new Path2D(), portals = [];
+    const motors = [];
+    for (const e of g.edges.values()) {
+      const [ax, ay] = this.center(g, e.a), [bx, by] = this.center(g, e.b);
+      if (e.kind === 'road') { ground.moveTo(ax, ay); ground.lineTo(bx, by); }
+      else if (e.kind === 'bridge') {
+        rails.moveTo(ax, ay); rails.lineTo(bx, by);
+        ground.moveTo(ax, ay); ground.lineTo(bx, by);
+      } else if (e.kind === 'tunnel') {
+        const L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L;
+        ground.moveTo(ax, ay); ground.lineTo(ax + ux * 0.6, ay + uy * 0.6);
+        ground.moveTo(bx, by); ground.lineTo(bx - ux * 0.6, by - uy * 0.6);
+        tunnels.moveTo(ax + ux * 0.6, ay + uy * 0.6); tunnels.lineTo(bx - ux * 0.6, by - uy * 0.6);
+        portals.push([ax + ux * 0.62, ay + uy * 0.62, ux, uy], [bx - ux * 0.62, by - uy * 0.62, ux, uy]);
+      } else motors.push([ax, ay, bx, by]);
+    }
+    ctx.strokeStyle = P.rail; ctx.lineWidth = 0.8; ctx.stroke(rails);
+    ctx.strokeStyle = P.road; ctx.lineWidth = 0.56; ctx.stroke(ground);
+    ctx.setLineDash([0.18, 0.16]); ctx.strokeStyle = '#5e6a7c'; ctx.lineWidth = 0.14; ctx.stroke(tunnels); ctx.setLineDash([]);
+    ctx.strokeStyle = '#05080c'; ctx.lineWidth = 0.18; ctx.lineCap = 'butt';
+    for (const [px, py, ux, uy] of portals) {
+      ctx.beginPath(); ctx.moveTo(px - uy * 0.38, py + ux * 0.38); ctx.lineTo(px + uy * 0.38, py - ux * 0.38); ctx.stroke();
+    }
+    ctx.lineCap = 'round';
+
+    for (const [n, f] of g.features) {
+      const [x, y] = this.center(g, n);
+      if (f === 'roundabout') {
+        ctx.fillStyle = P.road; ctx.beginPath(); ctx.arc(x, y, 0.48, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = P.land; ctx.beginPath(); ctx.arc(x, y, 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#7f93a9'; ctx.lineWidth = 0.04; ctx.setLineDash([0.12, 0.1]);
+        ctx.beginPath(); ctx.arc(x, y, 0.34, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      } else {
+        const ph = g.lightPhase(n);
+        ctx.fillStyle = '#05080c'; ctx.beginPath(); ctx.arc(x, y, 0.24, 0, Math.PI * 2); ctx.fill();
+        ctx.lineWidth = 0.09;
+        ctx.strokeStyle = ph === 0 ? '#5dff9a' : '#ff5a5a';
+        ctx.beginPath(); ctx.moveTo(x - 0.15, y); ctx.lineTo(x + 0.15, y); ctx.stroke();
+        ctx.strokeStyle = ph === 1 ? '#5dff9a' : '#ff5a5a';
+        ctx.beginPath(); ctx.moveTo(x, y - 0.15); ctx.lineTo(x, y + 0.15); ctx.stroke();
+      }
+    }
+
+    for (const [ax, ay, bx, by] of motors) {
+      ctx.strokeStyle = 'rgba(5,8,12,0.75)'; ctx.lineWidth = 0.66;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.strokeStyle = P.motor; ctx.lineWidth = 0.44; ctx.stroke();
+      ctx.strokeStyle = 'rgba(10,16,23,0.55)'; ctx.lineWidth = 0.05; ctx.setLineDash([0.2, 0.18]); ctx.stroke(); ctx.setLineDash([]);
+      for (const [x, y] of [[ax, ay], [bx, by]]) { ctx.fillStyle = P.motor; ctx.beginPath(); ctx.arc(x, y, 0.3, 0, Math.PI * 2); ctx.fill(); }
+    }
+  }
+
+  drawBuildings(g, dt) {
+    const ctx = this.ctx;
+    for (const b of g.buildings) {
+      const col = COLORS[b.color];
+      const age = g.time - b.born;
+      const pop = Math.min(1, age / 0.35), sc = pop < 1 ? 0.6 + 0.4 * (1 - Math.pow(1 - pop, 3)) + Math.sin(pop * Math.PI) * 0.12 : 1;
+      if (age < 2.5) { // attention ring for new arrivals
+        const r = (b.kind === 'dest' ? 1.3 : 0.5) + age * 0.9;
+        ctx.strokeStyle = col; ctx.globalAlpha = Math.max(0, 0.6 * (1 - age / 2.5)); ctx.lineWidth = 0.06;
+        ctx.beginPath(); ctx.arc(b.x + b.w / 2, b.y + b.h / 2, r, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.save();
+      ctx.translate(b.x + b.w / 2, b.y + b.h / 2);
+      ctx.scale(sc, sc);
+      if (b.kind === 'house') {
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, 0.32, 0, Math.PI * 2); ctx.fill();
+        const home = b.cars.filter((c) => c.state === 'home').length;
+        ctx.fillStyle = 'rgba(10,16,23,0.8)';
+        for (let k = 0; k < home; k++) { ctx.beginPath(); ctx.arc((k - (home - 1) / 2) * 0.2, 0, 0.065, 0, Math.PI * 2); ctx.fill(); }
+      } else {
+        if (b.flash > 0) {
+          b.flash = Math.max(0, b.flash - dt * 2.5);
+          ctx.fillStyle = col; ctx.globalAlpha = b.flash * 0.35;
+          ctx.beginPath(); ctx.roundRect(-1.0, -1.0, 2.0, 2.0, 0.4); ctx.fill(); ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = P.bg; ctx.beginPath(); ctx.roundRect(-0.9, -0.9, 1.8, 1.8, 0.32); ctx.fill();
+        ctx.fillStyle = col; ctx.globalAlpha = 0.16; ctx.fill(); ctx.globalAlpha = 1;
+        ctx.strokeStyle = col; ctx.lineWidth = 0.09; ctx.stroke();
+        for (let k = 0; k < MAX_PINS; k++) {
+          const cx = -0.54 + (k % 4) * 0.36, cy = -0.42 + Math.floor(k / 4) * 0.42;
+          ctx.fillStyle = col;
+          ctx.globalAlpha = k < b.pins ? 1 : 0.13;
+          ctx.beginPath(); ctx.arc(cx, cy, k < b.pins ? 0.11 : 0.07, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+    }
+  }
+
+  drawCars(g) {
+    const ctx = this.ctx;
+    for (const c of g.cars) {
+      if (!c.lane) continue;
+      const p = this.carPose(g, c);
+      ctx.save();
+      ctx.translate(p.x, p.y); ctx.rotate(p.ang);
+      ctx.fillStyle = COLORS[c.color];
+      ctx.beginPath(); ctx.roundRect(-0.19, -0.105, 0.38, 0.21, 0.07); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fillRect(0.1, -0.075, 0.05, 0.15);
+      if (!c.moving) { ctx.fillStyle = '#ff3b3b'; ctx.fillRect(-0.19, -0.09, 0.05, 0.05); ctx.fillRect(-0.19, 0.04, 0.05, 0.05); }
+      ctx.restore();
+    }
+  }
+
+  drawAlerts(g) {
+    const ctx = this.ctx;
+    for (const d of g.dests) {
+      if (d.over <= 0 && g.failed !== d) continue;
+      const p = g.failed === d ? 1 : d.over / g.mode.overflowTime;
+      const cx = d.x + 1, cy = d.y + 1;
+      const pulse = 0.65 + 0.35 * Math.sin(performance.now() / (p > 0.6 ? 110 : 220));
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(255,77,77,0.18)'; ctx.lineWidth = 0.16;
+      ctx.beginPath(); ctx.arc(cx, cy, 1.3, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = `rgba(255,77,77,${pulse})`;
+      ctx.beginPath(); ctx.arc(cx, cy, 1.3, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2); ctx.stroke();
+      if (g.failed === d) {
+        const r = 1.6 + (performance.now() % 1200) / 1200 * 1.5;
+        ctx.strokeStyle = `rgba(255,77,77,${0.7 * (1 - (r - 1.6) / 1.5)})`; ctx.lineWidth = 0.1;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+  }
+
+  drawPreview(g, ui) {
+    const pv = ui.preview;
+    if (!pv) return;
+    const ctx = this.ctx;
+    if (pv.type === 'motor') {
+      const [ax, ay] = this.center(g, pv.a);
+      const [bx, by] = pv.pt;
+      ctx.strokeStyle = pv.ok ? P.motor : '#ff6b6b'; ctx.globalAlpha = 0.75; ctx.lineWidth = 0.3;
+      ctx.setLineDash([0.3, 0.22]);
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+    } else if (pv.type === 'span') {
+      const [fx, fy] = g.xy(pv.from);
+      ctx.fillStyle = pv.kind === 'bridge' ? 'rgba(142,163,184,0.35)' : 'rgba(160,140,110,0.35)';
+      for (let k = 1; k <= pv.len; k++) {
+        const x = fx + pv.dx * k, y = fy + pv.dy * k;
+        if (!g.inMap(x, y)) break;
+        ctx.beginPath(); ctx.roundRect(x + 0.12, y + 0.12, 0.76, 0.76, 0.2); ctx.fill();
+      }
+    }
+  }
+
+  drawHover(g, ui) {
+    const ctx = this.ctx, [x, y] = g.xy(ui.hover);
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 0.06;
+    ctx.beginPath(); ctx.roundRect(x + 0.05, y + 0.05, 0.9, 0.9, 0.2); ctx.stroke();
+  }
+}
+
+// ---- js/main.js ----
+
+
+
+const $ = (s) => document.querySelector(s);
+const canvas = $('#cv');
+const R = new Renderer(canvas);
+
+const ICONS = {
+  road: '<path d="M7 21 11 3M17 21 13 3" /><path d="M12 7v2M12 12v2M12 17v2" />',
+  erase: '<path d="M4 15 13 6l6 6-7 7H8z" /><path d="M9 19h11" />',
+  motorway: '<path d="M3 18C8 6 16 6 21 18" /><path d="M7 18c3-7 7-7 10 0" opacity=".5" />',
+  roundabout: '<circle cx="12" cy="12" r="5" /><path d="M12 2v5M12 17v5M2 12h5M17 12h5" />',
+  lights: '<rect x="8" y="3" width="8" height="18" rx="3" /><circle cx="12" cy="8" r="1.4" /><circle cx="12" cy="13" r="1.4" /><circle cx="12" cy="18" r="0" />',
+  bridge: '<path d="M2 16h20M4 16c2-6 14-6 16 0" /><path d="M8 16v-3M16 16v-3M12 16v-4" />',
+  tunnel: '<path d="M3 20h18M6 20v-6a6 6 0 0 1 12 0v6" /><path d="M9 20v-5a3 3 0 0 1 6 0v5" opacity=".5" />',
+};
+const icon = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>`;
+
+const TOOLS = [
+  { id: 'road', label: 'Road', key: '1', item: 'roads' },
+  { id: 'erase', label: 'Erase', key: '2' },
+  { id: 'motorway', label: 'Motorway', key: '3', item: 'motorway' },
+  { id: 'roundabout', label: 'Roundabout', key: '4', item: 'roundabout' },
+  { id: 'lights', label: 'Lights', key: '5', item: 'lights' },
+];
+
+let game = null;
+let tool = 'road';
+let paused = false;
+let speed = 1;
+const ui = { preview: null, hover: -1, hoverTool: false };
+const sel = JSON.parse(localStorage.getItem('arterial.sel') || '{"map":"meadow","mode":"survival"}');
+
+// ---------- best scores ----------
+const bestKey = (m, mo) => `${m}:${mo}`;
+const bests = () => JSON.parse(localStorage.getItem('arterial.best') || '{}');
+function saveBest(g) {
+  const b = bests(), k = bestKey(g.mapId, g.mode.id);
+  const isNew = g.score > (b[k] || 0);
+  if (isNew) { b[k] = g.score; localStorage.setItem('arterial.best', JSON.stringify(b)); }
+  return isNew;
+}
+
+// ---------- menu ----------
+function miniMap(mapId) {
+  const W = 32, H = 22, t = generateTerrain(mapId, W, H, 4242);
+  const c = document.createElement('canvas');
+  c.width = W * 4; c.height = H * 4;
+  const x = c.getContext('2d');
+  x.fillStyle = PALETTE.land; x.fillRect(0, 0, c.width, c.height);
+  for (let i = 0; i < W * H; i++) {
+    if (t[i] === LAND) continue;
+    x.fillStyle = t[i] === WATER ? '#1d5578' : '#3c4454';
+    x.fillRect((i % W) * 4, ((i / W) | 0) * 4, 4, 4);
+  }
+  return c;
+}
+
+function buildMenu() {
+  const maps = $('#maps');
+  maps.innerHTML = '';
+  for (const m of MAPS) {
+    const b = document.createElement('button');
+    b.className = 'card map' + (sel.map === m.id ? ' on' : '');
+    b.append(miniMap(m.id));
+    const best = bests()[bestKey(m.id, sel.mode)];
+    b.insertAdjacentHTML('beforeend', `<b>${m.name}</b><span>${m.blurb}</span>${best ? `<em>Best ${best}</em>` : ''}`);
+    b.onclick = () => { sel.map = m.id; persistSel(); buildMenu(); };
+    maps.append(b);
+  }
+  const modes = $('#modes');
+  modes.innerHTML = '';
+  for (const m of Object.values(MODES)) {
+    const b = document.createElement('button');
+    b.className = 'card mode' + (sel.mode === m.id ? ' on' : '');
+    b.innerHTML = `<b>${m.name}</b><span>${m.blurb}</span>`;
+    b.onclick = () => { sel.mode = m.id; persistSel(); buildMenu(); };
+    modes.append(b);
+  }
+}
+function persistSel() { localStorage.setItem('arterial.sel', JSON.stringify(sel)); }
+
+function show(id, on) { $(id).classList.toggle('hidden', !on); }
+
+function startGame() {
+  const portrait = window.innerHeight > window.innerWidth * 1.05;
+  game = new Game({ mode: sel.mode, mapId: sel.map, seed: (Math.random() * 2 ** 32) >>> 0, portrait });
+  game.on('upgrade', showUpgrade);
+  game.on('over', showOver);
+  R.fit = null; R.resetView();
+  paused = false; speed = 1; tool = 'road';
+  ui.preview = null; ui.hover = -1;
+  show('#menu', false); show('#over', false); show('#upgrade', false); show('#pausemenu', false);
+  show('#hud', true);
+  buildToolbar();
+  updateHud(true);
+  toast(game.mode.id === 'creative' ? 'Creative: build freely' : 'Drag from a house to its matching hub');
+}
+
+function toMenu() {
+  if (game && (game.mode.id === 'endless' || game.mode.id === 'creative') && game.score) saveBest(game);
+  game = null;
+  show('#hud', false); show('#over', false); show('#upgrade', false); show('#pausemenu', false);
+  show('#menu', true);
+  buildMenu();
+}
+
+// ---------- HUD ----------
+function buildToolbar() {
+  const bar = $('#toolbar');
+  bar.innerHTML = '';
+  for (const t of TOOLS) {
+    const b = document.createElement('button');
+    b.className = 'tool';
+    b.dataset.tool = t.id;
+    b.title = `${t.label} (${t.key})`;
+    b.innerHTML = `${icon(t.id)}<span class="lbl">${t.label}</span>${t.item ? '<i class="n"></i>' : ''}`;
+    b.onclick = () => setTool(t.id);
+    bar.append(b);
+  }
+  for (const k of ['bridge', 'tunnel']) {
+    if ((k === 'bridge' && !game.hasWater) || (k === 'tunnel' && !game.hasMountain)) continue;
+    const b = document.createElement('div');
+    b.className = 'tool passive';
+    b.dataset.item = k;
+    b.title = k === 'bridge' ? 'Bridges: draw a road straight across water' : 'Tunnels: draw a road straight through rock';
+    b.innerHTML = `${icon(k)}<span class="lbl">${k === 'bridge' ? 'Bridges' : 'Tunnels'}</span><i class="n"></i>`;
+    bar.append(b);
+  }
+  setTool(tool);
+}
+
+function setTool(t) {
+  tool = t;
+  for (const b of document.querySelectorAll('.tool[data-tool]')) b.classList.toggle('on', b.dataset.tool === t);
+  ui.hoverTool = t === 'roundabout' || t === 'lights';
+}
+
+let hudT = 0;
+function fmt(n) { return n === Infinity ? '∞' : String(Math.max(0, n)); }
+function updateHud(force) {
+  if (!game) return;
+  hudT -= 1;
+  if (!force && hudT > 0) return;
+  hudT = 6;
+  $('#score').textContent = game.score;
+  $('#week').textContent = 'Week ' + game.week;
+  $('#day').textContent = game.dayName;
+  $('#weekfill').style.width = (game.weekProgress * 100).toFixed(1) + '%';
+  const counts = {
+    roads: game.roadsLeft(), motorway: game.mode.unlimited ? Infinity : game.inv.motorway,
+    roundabout: game.mode.unlimited ? Infinity : game.inv.roundabout, lights: game.mode.unlimited ? Infinity : game.inv.lights,
+    bridge: game.mode.unlimited ? Infinity : game.inv.bridge, tunnel: game.mode.unlimited ? Infinity : game.inv.tunnel,
+  };
+  for (const b of document.querySelectorAll('#toolbar .tool')) {
+    const item = b.dataset.item || TOOLS.find((t) => t.id === b.dataset.tool)?.item;
+    if (!item) continue;
+    b.querySelector('.n').textContent = fmt(counts[item]);
+    b.classList.toggle('empty', counts[item] <= 0);
+  }
+  $('#btn-pause').innerHTML = paused ? '&#9654;' : '&#10073;&#10073;';
+  $('#btn-pause').classList.toggle('on', paused);
+  $('#btn-speed').textContent = speed + '×';
+  $('#btn-fit').classList.toggle('hidden', R.zoom <= 1.01);
+  $('#paused-tag').classList.toggle('hidden', !paused);
+}
+
+let toastTimer = 0;
+function toast(msg) {
+  if (!msg) return;
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ---------- modals ----------
+function showUpgrade(choices) {
+  $('#up-week').textContent = `Week ${game.week}`;
+  $('#up-sub').textContent = `The city limits grow. +15 road tiles arrive. Choose one more:`;
+  const box = $('#up-cards');
+  box.innerHTML = '';
+  choices.forEach((c, k) => {
+    const b = document.createElement('button');
+    b.className = 'card upgrade';
+    const ic = c.item === 'roads' ? 'road' : c.item;
+    b.innerHTML = `${icon(ic)}<b>${c.label}</b><span>${c.desc}</span>`;
+    b.onclick = () => { game.chooseUpgrade(k); show('#upgrade', false); updateHud(true); };
+    box.append(b);
+  });
+  show('#upgrade', true);
+}
+
+function showOver(d) {
+  const isNew = saveBest(game);
+  $('#over-title').textContent = `Gridlock at the ${COLOR_NAMES[d.color]} hub`;
+  $('#over-title').style.color = COLORS[d.color];
+  $('#over-score').textContent = game.score;
+  $('#over-best').textContent = isNew ? 'New best!' : `Best: ${bests()[bestKey(game.mapId, game.mode.id)] || 0}`;
+  $('#over-sub').textContent = `${MAPS.find((m) => m.id === game.mapId).name} · ${game.mode.name} · week ${game.week}`;
+  setTimeout(() => game && game.state === 'over' && show('#over', true), 1400);
+}
+
+// ---------- input ----------
+const pointers = new Map();
+let gesture = null;
+let stroke = null;
+
+const xy = (i) => game.xy(i);
+const sign = Math.sign;
+
+function lineCells(a, b) {
+  let [x, y] = xy(a);
+  const [tx, ty] = xy(b), out = [];
+  while ((x !== tx || y !== ty) && out.length < 200) {
+    const dx = tx - x, dy = ty - y;
+    if (Math.abs(dx) > 2 * Math.abs(dy)) x += sign(dx);
+    else if (Math.abs(dy) > 2 * Math.abs(dx)) y += sign(dy);
+    else { x += sign(dx); y += sign(dy); }
+    out.push(game.idx(x, y));
+  }
+  return out;
+}
+
+// The cell under the pointer, but only once the pointer is near its centre,
+// so dragging corner to corner makes a clean diagonal.
+function strokeCell(px, py) {
+  const [wx, wy] = R.toWorld(px, py);
+  const x = Math.floor(wx), y = Math.floor(wy);
+  if (!game.inMap(x, y)) return -1;
+  const i = game.idx(x, y);
+  if (stroke && stroke.last >= 0) {
+    const [lx, ly] = xy(stroke.last);
+    const far = Math.max(Math.abs(lx - x), Math.abs(ly - y)) > 1;
+    if (!far && Math.hypot(wx - x - 0.5, wy - y - 0.5) > 0.46) return stroke.last;
+  }
+  return i;
+}
+
+function beginStroke(e, kind) {
+  const c = R.cellAt(game, e.clientX, e.clientY);
+  stroke = { kind, last: -1, pending: null, x0: e.clientX, y0: e.clientY, dead: false, cell: c };
+  if (kind === 'road') { if (c >= 0 && game.terrain[c] === LAND) stroke.last = c; }
+  else if (kind === 'erase') { if (game.eraseCell(c)) {} stroke.last = c; }
+  else if (kind === 'motorway') {
+    if (c >= 0 && game.isNode(c)) { stroke.a = c; ui.preview = { type: 'motor', a: c, pt: R.toWorld(e.clientX, e.clientY), ok: false }; }
+    else { toast('Start a motorway on a road or building'); stroke = null; }
+  } else if (kind === 'pan') { stroke.px = e.clientX; stroke.py = e.clientY; }
+}
+
+function moveStroke(e) {
+  if (!stroke) return;
+  const k = stroke.kind;
+  if (k === 'pan') { R.pan.x -= (e.clientX - stroke.px) / R.s; R.pan.y -= (e.clientY - stroke.py) / R.s; stroke.px = e.clientX; stroke.py = e.clientY; R.layout(game); return; }
+  if (k === 'road') { const c = strokeCell(e.clientX, e.clientY); if (c >= 0) roadTo(c); return; }
+  const c = R.cellAt(game, e.clientX, e.clientY);
+  if (c < 0) return;
+  if (k === 'erase') {
+    if (c === stroke.last) return;
+    for (const n of stroke.last >= 0 ? lineCells(stroke.last, c) : [c]) game.eraseCell(n);
+    stroke.last = c;
+  } else if (k === 'motorway') {
+    ui.preview.pt = R.toWorld(e.clientX, e.clientY);
+    ui.preview.ok = game.canMotorway(stroke.a, c).ok;
+  } else { ui.hover = c; stroke.cell = c; }
+}
+
+function endStroke(e) {
+  if (!stroke) return;
+  const c = R.cellAt(game, e.clientX, e.clientY);
+  if (stroke.kind === 'motorway') {
+    const r = game.buildMotorway(stroke.a, c);
+    if (!r.ok && c !== stroke.a) toast(r.reason);
+  } else if (stroke.kind === 'roundabout' || stroke.kind === 'lights') {
+    const r = game.toggleFeature(c, stroke.kind);
+    if (!r.ok) toast(r.reason);
+  }
+  stroke = null;
+  ui.preview = null;
+}
+
+function roadTo(c) {
+  if (stroke.dead) return;
+  if (stroke.pending) { handlePending(c); return; }
+  if (stroke.last < 0) { if (game.terrain[c] === LAND) stroke.last = c; return; }
+  if (c === stroke.last) return;
+  for (const n of lineCells(stroke.last, c)) {
+    if (!stepTo(n) || stroke.pending) break;
+  }
+}
+
+function stepTo(n) {
+  const t = game.terrain[n];
+  if (t === LAND) {
+    const r = game.buildRoad(stroke.last, n);
+    if (r.ok) { stroke.last = n; return true; }
+    toast(r.reason);
+    if (r.reason === 'Out of road tiles' || r.reason === 'Outside the city limits') stroke.dead = true;
+    return false;
+  }
+  const [lx, ly] = xy(stroke.last), [nx, ny] = xy(n);
+  const kind = t === WATER ? 'bridge' : 'tunnel';
+  stroke.pending = { from: stroke.last, dx: sign(nx - lx), dy: sign(ny - ly), kind };
+  ui.preview = { type: 'span', from: stroke.last, dx: stroke.pending.dx, dy: stroke.pending.dy, len: 1, kind };
+  return false;
+}
+
+function handlePending(c) {
+  const p = stroke.pending;
+  if (c === p.from) return;
+  const [fx, fy] = xy(p.from), [cx, cy] = xy(c);
+  const ddx = cx - fx, ddy = cy - fy, k = Math.max(Math.abs(ddx), Math.abs(ddy));
+  if (ddx === p.dx * k && ddy === p.dy * k) {
+    ui.preview.len = k;
+    if (game.terrain[c] === LAND) {
+      const r = game.buildSpan(p.from, c);
+      stroke.pending = null; ui.preview = null;
+      if (r.ok) stroke.last = c;
+      else { toast(r.reason); stroke.dead = true; }
+    }
+    return;
+  }
+  stroke.pending = null; ui.preview = null;
+  stroke.last = p.from;
+  roadTo(c);
+}
+
+function pinchState() {
+  const [a, b] = [...pointers.values()];
+  return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (!game) return;
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) {
+    stroke = null; ui.preview = null;
+    const s = pinchState();
+    gesture = { ...s, zoom: R.zoom, w: R.toWorld(s.mx, s.my) };
+    return;
+  }
+  if (pointers.size > 2 || game.state === 'over') return;
+  if (e.button === 1) { beginStroke(e, 'pan'); return; }
+  beginStroke(e, e.button === 2 ? 'erase' : tool);
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!game) return;
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (gesture && pointers.size >= 2) {
+    const s = pinchState();
+    R.setView(game, gesture.zoom * (s.d / gesture.d), gesture.w[0], gesture.w[1], s.mx, s.my);
+    return;
+  }
+  if (stroke) moveStroke(e);
+  else if (ui.hoverTool && e.pointerType === 'mouse') ui.hover = R.cellAt(game, e.clientX, e.clientY);
+});
+const up = (e) => {
+  pointers.delete(e.pointerId);
+  if (gesture) { if (pointers.size < 2) gesture = null; return; }
+  if (game && stroke) endStroke(e);
+};
+canvas.addEventListener('pointerup', up);
+canvas.addEventListener('pointercancel', (e) => { pointers.delete(e.pointerId); gesture = null; stroke = null; ui.preview = null; });
+canvas.addEventListener('pointerleave', () => { if (!stroke) ui.hover = -1; });
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+canvas.addEventListener('wheel', (e) => {
+  if (!game) return;
+  e.preventDefault();
+  R.zoomAt(game, e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0015));
+}, { passive: false });
+
+window.addEventListener('keydown', (e) => {
+  if (!game) return;
+  const t = TOOLS.find((x) => x.key === e.key);
+  if (t) setTool(t.id);
+  else if (e.key === ' ') { togglePause(); e.preventDefault(); }
+  else if (e.key === 'f') R.resetView();
+  else if (e.key === 'Escape') openPauseMenu();
+});
+
+function togglePause() { paused = !paused; updateHud(true); }
+function openPauseMenu() {
+  if (!game || game.state === 'over') return;
+  paused = true; updateHud(true);
+  show('#pausemenu', true);
+}
+
+$('#btn-pause').onclick = togglePause;
+$('#btn-speed').onclick = () => { speed = speed === 1 ? 2 : speed === 2 ? 3 : 1; updateHud(true); };
+$('#btn-fit').onclick = () => { R.resetView(); updateHud(true); };
+$('#btn-menu').onclick = openPauseMenu;
+$('#btn-play').onclick = startGame;
+$('#pm-resume').onclick = () => { show('#pausemenu', false); paused = false; updateHud(true); };
+$('#pm-restart').onclick = startGame;
+$('#pm-quit').onclick = toMenu;
+$('#over-retry').onclick = startGame;
+$('#over-menu').onclick = toMenu;
+$('#btn-help').onclick = () => show('#help', true);
+$('#help-close').onclick = () => show('#help', false);
+
+document.addEventListener('visibilitychange', () => { if (document.hidden && game && game.state === 'running') { paused = true; updateHud(true); } });
+window.addEventListener('resize', () => { R.resize(); updateHud(true); });
+
+// ---------- loop ----------
+let last = performance.now(), acc = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (game) {
+    if (!paused && game.state === 'running') {
+      acc += dt * speed;
+      const h = 1 / 60;
+      let n = 0;
+      while (acc >= h && n < 12) { game.step(h); acc -= h; n++; }
+      if (n >= 12) acc = 0;
+    }
+    R.update(game, dt);
+    R.draw(game, ui, dt);
+    updateHud();
+  } else {
+    const ctx = R.ctx;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = PALETTE.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  requestAnimationFrame(frame);
+}
+
+buildMenu();
+requestAnimationFrame(frame);
+window.arterial = { get game() { return game; }, R, startGame, setTool, sel, toMenu };
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !location.hostname.match(/^(localhost|127\.)/)) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+})();
+</script>
+</body>
+</html>

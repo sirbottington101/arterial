@@ -23,6 +23,11 @@ erased tiles are lost), Creative (unlimited everything).
 **Maps**: Meadowfield, Saltmarsh Delta (river), Ironback Ridge (mountains),
 Glasswater (lakes and rock). Every game generates a fresh layout.
 
+## Single file
+
+`dist/arterial.html` is the whole game in one file: download it and open it in
+any browser, no server needed. Rebuild it after changes with `node tools/bundle.mjs`.
+
 ## Run locally
 
 ```
